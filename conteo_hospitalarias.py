@@ -281,22 +281,36 @@ def main():
                 st.write(f"**Tipos de datos:**")
                 st.write(df.dtypes)
             
-            # Selección de columnas
-            st.header("2. Configuración del Análisis")
-            
+            # Selección de columnas - VERSIÓN CORREGIDA
             col1, col2 = st.columns(2)
+            
             with col1:
+                # Encontrar índice para columna de incidentes
+                incident_index = None
+                for i, col in enumerate(df.columns):
+                    if 'incident' in col.lower():
+                        incident_index = i
+                        break
+                
                 col_incidentes = st.selectbox(
                     "Selecciona la columna de INCIDENTES:",
                     options=df.columns,
-                    index=next((i for i, col in enumerate(df.columns) if 'incident' in col.lower()), 0) if any('incident' in col.lower() for col in df.columns) else None
+                    index=incident_index
                 )
             
             with col2:
+                # Encontrar índice para columna de traslado
+                traslado_index = None
+                for i, col in enumerate(df.columns):
+                    col_lower = col.lower()
+                    if any(word in col_lower for word in ['traslado', 'hospital', 'transfer']):
+                        traslado_index = i
+                        break
+                
                 col_traslado = st.selectbox(
                     "Selecciona la columna de TRASLADO A HOSPITAL:",
                     options=df.columns,
-                    index=next((i for i, col in enumerate(df.columns) if any(word in col.lower() for word in ['traslado', 'hospital', 'transfer']), 0) if any(any(word in col.lower() for word in ['traslado', 'hospital', 'transfer']) for col in df.columns) else None
+                    index=traslado_index
                 )
             
             # Filtro por fechas - CORREGIDO
@@ -307,11 +321,19 @@ def main():
             fecha_fin = None
             col_fechas = None
 
-            if usar_fechas:  # ← CORREGIDO: Removido "and col_incidentes"
+            if usar_fechas:
+                # Encontrar índice para columna de fechas
+                fecha_index = None
+                for i, col in enumerate(df.columns):
+                    col_lower = col.lower()
+                    if any(word in col_lower for word in ['fecha', 'date']):
+                        fecha_index = i
+                        break
+                
                 col_fechas = st.selectbox(
                     "Selecciona la columna de FECHAS:",
                     options=df.columns,
-                    index=next((i for i, col in enumerate(df.columns) if any(word in col.lower() for word in ['fecha', 'date']), 0) if any(any(word in col.lower() for word in ['fecha', 'date']) for col in df.columns) else None
+                    index=fecha_index
                 )
                 
                 if col_fechas:
@@ -339,25 +361,33 @@ def main():
             incluir_sm = st.checkbox("Incluir análisis por Servicios Médicos")
             
             col_sm = None
-            valor_sm = 'SM'  # Valor por defecto
+            valor_sm = 'SM'
             
             if incluir_sm:
+                # Encontrar índice para columna de servicios médicos
+                sm_index = None
+                for i, col in enumerate(df.columns):
+                    col_lower = col.lower()
+                    if any(word in col_lower for word in ['servicio', 'medic', 'sm']):
+                        sm_index = i
+                        break
+                
                 col_sm = st.selectbox(
                     "Selecciona la columna de SERVICIOS MÉDICOS:",
                     options=df.columns,
-                    index=next((i for i, col in enumerate(df.columns) if any(word in col.lower() for word in ['servicio', 'medic', 'sm']), 0) if any(any(word in col.lower() for word in ['servicio', 'medic', 'sm']) for col in df.columns) else None
+                    index=sm_index
                 )
                 
                 if col_sm:
                     # Mostrar valores únicos para ayudar al usuario
                     with st.expander("🔍 Ver valores únicos en esta columna"):
-                        valores_unicos = df[col_sm].dropna().unique()[:20]  # Mostrar primeros 20
+                        valores_unicos = df[col_sm].dropna().unique()[:20]
                         st.write(f"Valores encontrados: {list(valores_unicos)}")
                     
                     valor_sm = st.text_input(
                         "Valor que identifica Servicios Médicos:",
                         value="SM",
-                        help="Ingresa el valor exacto que identifica los Servicios Médicos en tu datos"
+                        help="Ingresa el valor exacto que identifica los Servicios Médicos en tus datos"
                     )
             
             # Botón para generar análisis
